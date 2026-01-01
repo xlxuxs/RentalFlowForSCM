@@ -1,0 +1,52 @@
+.rating-stars {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.rating-stars.sm {
+    font-size: 0.875rem;
+}
+
+.rating-stars.md {
+    font-size: 1rem;
+}
+
+.rating-stars.lg {
+    font-size: 1.5rem;
+}
+
+.star {
+    color: var(--color-gray-300);
+}
+
+.star.filled {
+    color: #F59E0B;
+}
+
+.star.half {
+    position: relative;
+    color: var(--color-gray-300);
+}
+
+.star.half::before {
+    content: '★';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50%;
+    overflow: hidden;
+    color: #F59E0B;
+}
+
+/* Interactive mode */
+.rating-stars.interactive {
+    cursor: pointer;
+}
+
+.rating-stars.interactive .star {
+    transition: transform 0.1s, color 0.1s;
+}
+
+.rating-stars.interactive .star:hover {
+    transform: scale(1.2);
+}

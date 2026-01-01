@@ -1,0 +1,73 @@
+/* Owner Items Page Styles */
+.owner-items-page {
+    min-height: calc(100vh - 200px);
+    background-color: var(--color-gray-50);
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-6);
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-10);
+}
+
+/* Add custom styles here if needed beyond Dashboard.css */
+.item-actions-overlay {
+    position: absolute;
+    top: var(--spacing-2);
+    right: var(--spacing-2);
+    display: flex;
+    gap: var(--spacing-2);
+    z-index: 10;
+}
+
+.item-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.item-action-btn:hover {
+    transform: scale(1.1);
+}
+
+.item-action-btn.edit:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.item-action-btn.delete:hover {
+    background-color: var(--color-error);
+    color: white;
+}
+
+.item-status-badge {
+    position: absolute;
+    top: var(--spacing-2);
+    left: var(--spacing-2);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    text-transform: uppercase;
+    z-index: 10;
+}
+
+.item-status-badge.active {
+    background-color: var(--color-success);
+    color: white;
+}
+
+.item-status-badge.inactive {
+    background-color: var(--color-gray-500);
+    color: white;
+}

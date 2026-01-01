@@ -1,0 +1,173 @@
+.dashboard-page {
+    min-height: 100vh;
+    background: var(--color-light);
+    padding-bottom: var(--spacing-8);
+}
+
+.dashboard-header {
+    background: var(--color-white);
+    padding: var(--spacing-8) 0;
+    margin-bottom: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-header h1 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-2);
+}
+
+.dashboard-header p {
+    color: var(--color-gray-500);
+}
+
+.status-tabs {
+    display: flex;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-6);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-2);
+    -webkit-overflow-scrolling: touch;
+}
+
+.status-tab {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-gray-600);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.status-tab:hover {
+    background: var(--color-gray-100);
+}
+
+.status-tab.active {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.tab-count {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+}
+
+.status-tab.active .tab-count {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.kanban-container {
+    padding: var(--spacing-6);
+    overflow-x: auto;
+    background: var(--color-light);
+    min-height: calc(100vh - 120px);
+}
+
+.kanban-board {
+    display: flex;
+    gap: var(--spacing-6);
+    padding-bottom: var(--spacing-6);
+    min-width: fit-content;
+}
+
+.kanban-column {
+    min-width: 320px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    background: #ebeef2;
+    padding: var(--spacing-4);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-gray-200);
+}
+
+.kanban-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-2);
+    border-bottom: 2px solid var(--color-gray-300);
+    margin-bottom: var(--spacing-2);
+}
+
+.status-title {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-gray-600);
+}
+
+.count-badge {
+    background: var(--color-white);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.kanban-column-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.column-empty {
+    padding: var(--spacing-8);
+    text-align: center;
+    color: var(--color-gray-400);
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--color-gray-300);
+}
+
+/* Ensure BookingCard fits Kanban column */
+.kanban-column .booking-card {
+    box-shadow: var(--shadow-sm);
+}
+
+.kanban-column .booking-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-6);
+}
+
+.pending-alert {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    background: #FEF3C7;
+    color: #92400E;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    margin-top: var(--spacing-4);
+}
+
+.alert-icon {
+    font-size: var(--font-size-lg);
+}
+
+.container-fluid {
+    padding: 0 var(--spacing-6);
+}

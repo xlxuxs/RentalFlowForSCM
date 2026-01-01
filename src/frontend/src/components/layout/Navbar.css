@@ -1,0 +1,105 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.navbar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-3) var(--spacing-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    text-decoration: none;
+    color: var(--color-dark);
+}
+
+.brand-icon {
+    font-size: 1.5rem;
+}
+
+.brand-text {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+}
+
+.nav-link {
+    color: var(--color-gray-600);
+    font-weight: 500;
+    text-decoration: none;
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.nav-link-icon {
+    font-size: 1.25rem;
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding-left: var(--spacing-4);
+    border-left: 1px solid var(--color-gray-200);
+}
+
+.nav-user-name {
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.nav-user-role {
+    font-size: var(--font-size-xs);
+}
+
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .navbar-links {
+        gap: var(--spacing-2);
+    }
+
+    .nav-link {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-1) var(--spacing-2);
+    }
+
+    .nav-user {
+        padding-left: var(--spacing-2);
+    }
+
+    .nav-user-name {
+        display: none;
+    }
+}

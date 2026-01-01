@@ -1,0 +1,46 @@
+.payment-callback-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-light);
+    padding: var(--spacing-4);
+}
+
+.callback-container {
+    background: var(--color-white);
+    padding: var(--spacing-8);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.callback-loading .spinner {
+    margin: 0 auto var(--spacing-6);
+}
+
+.success-icon,
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-4);
+}
+
+.callback-container h2 {
+    margin-bottom: var(--spacing-2);
+}
+
+.redirect-text {
+    color: var(--color-gray-500);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-6);
+}
+
+.callback-actions {
+    margin: var(--spacing-6) 0;
+}
+
+.callback-success h2 {
+    color: #2c7a7b;
+}

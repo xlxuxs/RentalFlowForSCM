@@ -1,0 +1,113 @@
+/* Notifications Page Styles */
+.notifications-page {
+    min-height: calc(100vh - 200px);
+    background-color: var(--color-gray-50);
+}
+
+.notifications-list {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-10);
+}
+
+.notification-item {
+    display: flex;
+    padding: var(--spacing-4);
+    border-bottom: 1px solid var(--color-gray-200);
+    transition: background-color 0.2s;
+    cursor: pointer;
+    position: relative;
+    gap: var(--spacing-4);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: var(--color-gray-50);
+}
+
+.notification-item.unread {
+    background-color: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--color-primary);
+}
+
+.notification-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex-grow: 1;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-1);
+}
+
+.notification-title {
+    font-weight: 700;
+    color: var(--color-dark);
+    margin: 0;
+    font-size: var(--font-size-base);
+}
+
+.notification-time {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+}
+
+.notification-message {
+    color: var(--color-gray-600);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.notification-actions {
+    margin-top: var(--spacing-2);
+}
+
+.mark-read-btn {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.mark-read-btn:hover {
+    text-decoration: underline;
+}
+
+.notifications-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-4);
+}
