@@ -11,6 +11,7 @@ services:
       - mongo_data:/data/db
     networks:
       - rentalflow
+    restart: unless-stopped
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
