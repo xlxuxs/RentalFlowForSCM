@@ -28,6 +28,7 @@ func (h *HTTPHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/items", h.HandleItems)
 	mux.HandleFunc("/api/items/owner", h.GetOwnerItems)
 	mux.HandleFunc("/api/items/search", h.SearchItems)
+	mux.HandleFunc("/api/items/featured", h.GetFeaturedItems)
 	mux.HandleFunc("/api/availability/block", h.BlockDates)
 	mux.HandleFunc("/api/maintenance", h.CreateMaintenance)
 }
@@ -318,6 +319,37 @@ func (h *HTTPHandler) GetOwnerItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"items": result,
 		"total": total,
+	})
+}
+
+func (h *HTTPHandler) GetFeaturedItems(w http.ResponseWriter, r *http.Request) {
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit < 1 {
+		limit = 10
+	}
+
+	items, err := h.inventoryService.GetFeaturedItems(r.Context(), limit)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	result := make([]map[string]interface{}, len(items))
+	for i, item := range items {
+		result[i] = map[string]interface{}{
+			"id":          item.ID.String(),
+			"title":       item.Title,
+			"description": item.Description,
+			"category":    item.Category,
+			"city":        item.City,
+			"daily_rate":  item.DailyRate,
+			"images":      item.Images,
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"items": result,
 	})
 }
 
