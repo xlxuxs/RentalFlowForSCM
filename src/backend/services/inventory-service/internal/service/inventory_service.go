@@ -98,6 +98,14 @@ func (s *InventoryService) GetOwnerItems(ctx context.Context, ownerID uuid.UUID,
 	return s.itemRepo.GetByOwner(ctx, ownerID, offset, pageSize)
 }
 
+// GetFeaturedItems retrieves featured rental items
+func (s *InventoryService) GetFeaturedItems(ctx context.Context, limit int) ([]*domain.RentalItem, error) {
+	if limit < 1 || limit > 50 {
+		limit = 10
+	}
+	return s.itemRepo.GetFeatured(ctx, limit)
+}
+
 // UpdateItem updates an existing item
 func (s *InventoryService) UpdateItem(ctx context.Context, itemID, ownerID uuid.UUID, updates map[string]interface{}) (*domain.RentalItem, error) {
 	item, err := s.itemRepo.GetByID(ctx, itemID)
@@ -121,6 +129,9 @@ func (s *InventoryService) UpdateItem(ctx context.Context, itemID, ownerID uuid.
 	}
 	if v, ok := updates["is_active"].(bool); ok {
 		item.IsActive = v
+	}
+	if v, ok := updates["is_featured"].(bool); ok {
+		item.IsFeatured = v
 	}
 
 	if err := s.itemRepo.Update(ctx, item); err != nil {

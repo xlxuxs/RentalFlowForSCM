@@ -47,6 +47,7 @@ components:
         images: { type: array, items: { type: string } }
         city: { type: string }
         is_active: { type: boolean }
+        is_featured: { type: boolean }
 
     Booking:
       type: object
@@ -137,6 +138,27 @@ paths:
       responses:
         "201":
           description: Created
+
+  /api/items/featured:
+    get:
+      summary: Get featured rental items
+      tags: [Inventory]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, maximum: 50 }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Item"
 
   /api/bookings:
     post:
