@@ -27,8 +27,8 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 // Register registers a new user
 func (h *AuthHandler) Register(ctx context.Context, req *RegisterRequest) (*AuthResponse, error) {
 	// Validate required fields
-	if req.Email == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" {
-		return nil, status.Error(codes.InvalidArgument, "email, password, first_name, and last_name are required")
+	if req.Email == "" || req.Password == "" || req.FirstName == "" || req.LastName == "" || req.Phone == "" {
+		return nil, status.Error(codes.InvalidArgument, "email, password, first_name, last_name, and phone are required")
 	}
 
 	role := domain.UserRole(req.Role)
