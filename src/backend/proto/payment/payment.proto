@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/payment";
+
+import "google/protobuf/timestamp.proto";
+
+// PaymentService handles payment processing
+service PaymentService {
+  // Payment operations
+  rpc InitializePayment(InitializePaymentRequest) returns (InitializePaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (Payment);
+  rpc GetBookingPayments(GetBookingPaymentsRequest) returns (PaymentsResponse);
+  rpc ProcessRefund(ProcessRefundRequest) returns (Payment);
+  
+  // Webhook handling
+  rpc HandleWebhook(WebhookRequest) returns (WebhookResponse);
+  
+  // Invoice operations
+  rpc GenerateInvoice(GenerateInvoiceRequest) returns (Invoice);
+  rpc GetInvoice(GetInvoiceRequest) returns (Invoice);
+  
+  // Internal
+  rpc UpdatePaymentStatus(UpdatePaymentStatusRequest) returns (Payment);
+}
+
+// Payment represents a payment transaction
+message Payment {
+  string id = 1;
+  string booking_id = 2;
+  string payment_type = 3; // booking, deposit, additional_charge, refund
+  double amount = 4;
+  string currency = 5;
+  string status = 6; // pending, processing, completed, failed, refunded
+  string method = 7; // chapa, telebirr, bank_transfer, cash
+  
+  // Breakdown
+  PaymentBreakdown breakdown = 8;
+  
+  // Deposit tracking
+  bool deposit_held = 9;
+  string deposit_status = 10; // held, refunded, partially_refunded, forfeited
+  
+  // Provider details
+  string provider_name = 11;
+  string provider_transaction_id = 12;
+  
+  // Receipt
+  string receipt_url = 13;
+  
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+message PaymentBreakdown {
+  double rental_fee = 1;
+  double security_deposit = 2;
+  double service_fee = 3;
+  double additional_services = 4;
+  double tax = 5;
+}
+
+// Initialize payment messages
+message InitializePaymentRequest {
+  string booking_id = 1;
+  string user_id = 2;
+  string method = 3; // chapa, telebirr, etc.
+  string callback_url = 4;
+  string return_url = 5;
+}
+
+message InitializePaymentResponse {
+  string payment_id = 1;
+  string checkout_url = 2;
+  string transaction_id = 3;
+  string status = 4;
+}
+
+// Get payment messages
+message GetPaymentRequest {
+  string payment_id = 1;
+  optional string user_id = 2;
+}
+
+message GetBookingPaymentsRequest {
+  string booking_id = 1;
+  string user_id = 2;
+}
+
+message PaymentsResponse {
+  repeated Payment payments = 1;
+}
+
+// Refund messages
+message ProcessRefundRequest {
+  string payment_id = 1;
+  string user_id = 2; // owner or admin
+  double amount = 3; // partial or full
+  string reason = 4;
+}
+
+// Webhook messages
+message WebhookRequest {
+  string provider = 1; // chapa, telebirr
+  string event_type = 2;
+  bytes payload = 3;
+  string signature = 4; // for verification
+}
+
+message WebhookResponse {
+  bool processed = 1;
+  string message = 2;
+}
+
+// Invoice messages
+message Invoice {
+  string id = 1;
+  string booking_id = 2;
+  string invoice_number = 3;
+  repeated InvoiceItem items = 4;
+  double subtotal = 5;
+  double tax = 6;
+  double total_amount = 7;
+  string status = 8; // pending, paid
+  google.protobuf.Timestamp due_date = 9;
+  google.protobuf.Timestamp paid_at = 10;
+  string pdf_url = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+message InvoiceItem {
+  string description = 1;
+  int32 quantity = 2;
+  double unit_price = 3;
+  double amount = 4;
+}
+
+message GenerateInvoiceRequest {
+  string booking_id = 1;
+}
+
+message GetInvoiceRequest {
+  string booking_id = 1;
+  string user_id = 2;
+}
+
+// Internal messages
+message UpdatePaymentStatusRequest {
+  string payment_id = 1;
+  string status = 2;
+  string provider_transaction_id = 3;
+}

@@ -1,0 +1,258 @@
+version: "3.8"
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:6-jammy
+    container_name: rentalflow-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - rentalflow
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: rentalflow-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - rentalflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rentalflow-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=rentalflow
+      - RABBITMQ_DEFAULT_PASS=devpassword
+    networks:
+      - rentalflow
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./services/auth-service/Dockerfile
+    container_name: rentalflow-auth
+    ports:
+      - "8081:8080"
+      - "50051:50051"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=auth-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_GRPC_PORT=50051
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=auth_db
+      - RENTALFLOW_REDIS_HOST=redis
+      - RENTALFLOW_REDIS_PORT=6379
+      - RENTALFLOW_JWT_SECRET=${JWT_SECRET}
+      - RENTALFLOW_JWT_ACCESS_EXPIRES_IN=${JWT_EXPIRY:-24h}
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # Inventory Service
+  inventory-service:
+    build:
+      context: .
+      dockerfile: ./services/inventory-service/Dockerfile
+    container_name: rentalflow-inventory
+    ports:
+      - "8082:8080"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=inventory-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=inventory_db
+      - RENTALFLOW_SERVICES_AUTH=auth-service:50051
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # Booking Service
+  booking-service:
+    build:
+      context: .
+      dockerfile: ./services/booking-service/Dockerfile
+    container_name: rentalflow-booking
+    ports:
+      - "8083:8080"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=booking-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=booking_db
+      - RENTALFLOW_SERVICES_AUTH=auth-service:50051
+      - RENTALFLOW_SERVICES_INVENTORY=inventory-service:8080
+      - RENTALFLOW_RABBITMQ_HOST=rabbitmq
+      - RENTALFLOW_RABBITMQ_PORT=5672
+      - RENTALFLOW_RABBITMQ_USER=rentalflow
+      - RENTALFLOW_RABBITMQ_PASSWORD=devpassword
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: ./services/payment-service/Dockerfile
+    container_name: rentalflow-payment
+    ports:
+      - "8084:8080"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=payment-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=payment_db
+      - CHAPA_SECRET_KEY=${CHAPA_SECRET_KEY}
+      - CHAPA_PUBLIC_KEY=${CHAPA_PUBLIC_KEY}
+      - CHAPA_WEBHOOK_SECRET=${CHAPA_WEBHOOK_SECRET}
+      - CALLBACK_URL=${CALLBACK_URL:-http://localhost:3001/payment/callback}
+      - RENTALFLOW_RABBITMQ_HOST=rabbitmq
+      - RENTALFLOW_RABBITMQ_PORT=5672
+      - RENTALFLOW_RABBITMQ_USER=rentalflow
+      - RENTALFLOW_RABBITMQ_PASSWORD=devpassword
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # Review Service
+  review-service:
+    build:
+      context: .
+      dockerfile: ./services/review-service/Dockerfile
+    container_name: rentalflow-review
+    ports:
+      - "8085:8080"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=review-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=review_db
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: ./services/notification-service/Dockerfile
+    container_name: rentalflow-notification
+    ports:
+      - "8086:8080"
+    environment:
+      - RENTALFLOW_SERVICE_NAME=notification-service
+      - RENTALFLOW_HTTP_PORT=8080
+      - RENTALFLOW_DATABASE_URI=mongodb://mongo:27017
+      - RENTALFLOW_DATABASE_NAME=notification_db
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@rentalflow.com}
+      - FROM_NAME=${FROM_NAME:-RentalFlow}
+      - RENTALFLOW_RABBITMQ_HOST=rabbitmq
+      - RENTALFLOW_RABBITMQ_PORT=5672
+      - RENTALFLOW_RABBITMQ_USER=rentalflow
+      - RENTALFLOW_RABBITMQ_PASSWORD=devpassword
+      - RENTALFLOW_LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
+    container_name: rentalflow-gateway
+    ports:
+      - "8000:8080"
+    environment:
+      - PORT=8080
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - INVENTORY_SERVICE_URL=http://inventory-service:8080
+      - BOOKING_SERVICE_URL=http://booking-service:8080
+      - PAYMENT_SERVICE_URL=http://payment-service:8080
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8080
+      - REVIEW_SERVICE_URL=http://review-service:8080
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - auth-service
+      - inventory-service
+      - booking-service
+      - payment-service
+      - notification-service
+      - review-service
+    networks:
+      - rentalflow
+    restart: unless-stopped
+
+networks:
+  rentalflow:
+    driver: bridge
+
+volumes:
+  mongo_data:

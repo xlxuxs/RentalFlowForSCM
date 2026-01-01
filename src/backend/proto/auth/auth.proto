@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/auth";
+
+import "google/protobuf/timestamp.proto";
+
+// AuthService handles authentication and user management
+service AuthService {
+  // Public endpoints
+  rpc Register(RegisterRequest) returns (AuthResponse);
+  rpc Login(LoginRequest) returns (AuthResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (AuthResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // Protected endpoints (require valid token)
+  rpc GetProfile(GetProfileRequest) returns (User);
+  rpc UpdateProfile(UpdateProfileRequest) returns (User);
+  rpc UploadIdentityDocument(UploadDocumentRequest) returns (UploadDocumentResponse);
+  rpc GetVerificationStatus(GetVerificationStatusRequest) returns (VerificationStatusResponse);
+  
+  // Internal (service-to-service)
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc GetUserById(GetUserByIdRequest) returns (User);
+  
+  // Admin endpoints
+  rpc GetUserByIdAdmin(GetUserByIdRequest) returns (User);
+  rpc VerifyUser(VerifyUserRequest) returns (User);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+// User represents a user in the system
+message User {
+  string id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone = 5;
+  string role = 6; // renter, owner, admin
+  bool identity_verified = 7;
+  string verification_status = 8; // pending, verified, rejected
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// Register messages
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string phone = 5;
+  string role = 6; // renter or owner
+}
+
+// Login messages
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// Auth response with tokens
+message AuthResponse {
+  User user = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4; // seconds until access token expires
+}
+
+// Refresh token messages
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// Logout messages
+message LogoutRequest {
+  string user_id = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+// Token validation messages (internal)
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string role = 3;
+  string email = 4;
+}
+
+// Profile messages
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  optional string first_name = 2;
+  optional string last_name = 3;
+  optional string phone = 4;
+}
+
+// Identity verification messages
+message UploadDocumentRequest {
+  string user_id = 1;
+  string document_type = 2; // driver_license, national_id, passport
+  bytes document_data = 3;
+  string filename = 4;
+}
+
+message UploadDocumentResponse {
+  string document_id = 1;
+  string document_url = 2;
+}
+
+message GetVerificationStatusRequest {
+  string user_id = 1;
+}
+
+message VerificationStatusResponse {
+  string status = 1; // pending, verified, rejected
+  repeated IdentityDocument documents = 2;
+}
+
+message IdentityDocument {
+  string id = 1;
+  string document_type = 2;
+  string document_url = 3;
+  google.protobuf.Timestamp uploaded_at = 4;
+}
+
+// Admin messages
+message GetUserByIdRequest {
+  string user_id = 1;
+}
+
+message VerifyUserRequest {
+  string user_id = 1;
+  string status = 2; // verified or rejected
+  string notes = 3; // optional admin notes
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string role = 3;
+  optional string verification_status = 4;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}

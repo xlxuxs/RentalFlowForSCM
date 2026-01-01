@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/notification";
+
+import "google/protobuf/timestamp.proto";
+
+// NotificationService handles notifications and messaging
+service NotificationService {
+  // Notification operations
+  rpc SendNotification(SendNotificationRequest) returns (Notification);
+  rpc GetUserNotifications(GetUserNotificationsRequest) returns (NotificationsResponse);
+  rpc MarkAsRead(MarkAsReadRequest) returns (Notification);
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse);
+  
+  // Messaging operations
+  rpc SendMessage(SendMessageRequest) returns (Message);
+  rpc GetBookingMessages(GetBookingMessagesRequest) returns (MessagesResponse);
+  
+  // Template operations (admin)
+  rpc CreateTemplate(CreateTemplateRequest) returns (NotificationTemplate);
+  rpc UpdateTemplate(UpdateTemplateRequest) returns (NotificationTemplate);
+  rpc ListTemplates(ListTemplatesRequest) returns (TemplatesResponse);
+}
+
+// Notification represents a notification
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string notification_type = 3; // BOOKING_CREATED, PAYMENT_RECEIVED, etc.
+  string title = 4;
+  string message = 5;
+  string channel = 6; // email, sms, push, in_app
+  string priority = 7; // low, medium, high, urgent
+  string status = 8; // pending, sent, failed, read
+  
+  map<string, string> metadata = 9;
+  string action_url = 10;
+  
+  google.protobuf.Timestamp sent_at = 11;
+  google.protobuf.Timestamp read_at = 12;
+  google.protobuf.Timestamp created_at = 13;
+}
+
+// Send notification messages
+message SendNotificationRequest {
+  string user_id = 1;
+  string notification_type = 2;
+  string channel = 3;
+  string priority = 4;
+  map<string, string> data = 5; // template variables
+}
+
+// Get notifications messages
+message GetUserNotificationsRequest {
+  string user_id = 1;
+  optional string status = 2;
+  optional string channel = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message NotificationsResponse {
+  repeated Notification notifications = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Mark as read messages
+message MarkAsReadRequest {
+  string notification_id = 1;
+  string user_id = 2;
+}
+
+// Unread count messages
+message GetUnreadCountRequest {
+  string user_id = 1;
+}
+
+message UnreadCountResponse {
+  int32 count = 1;
+}
+
+// Message represents a chat message
+message Message {
+  string id = 1;
+  string booking_id = 2;
+  string sender_id = 3;
+  string receiver_id = 4;
+  string content = 5;
+  repeated string attachments = 6;
+  bool is_read = 7;
+  google.protobuf.Timestamp read_at = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+// Send message
+message SendMessageRequest {
+  string booking_id = 1;
+  string sender_id = 2;
+  string receiver_id = 3;
+  string content = 4;
+  repeated string attachments = 5;
+}
+
+// Get booking messages
+message GetBookingMessagesRequest {
+  string booking_id = 1;
+  string user_id = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message MessagesResponse {
+  repeated Message messages = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Template messages
+message NotificationTemplate {
+  string id = 1;
+  string name = 2;
+  string channel = 3;
+  string subject = 4;
+  string body_template = 5;
+  repeated string variables = 6;
+  bool is_active = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message CreateTemplateRequest {
+  string name = 1;
+  string channel = 2;
+  string subject = 3;
+  string body_template = 4;
+  repeated string variables = 5;
+}
+
+message UpdateTemplateRequest {
+  string template_id = 1;
+  optional string name = 2;
+  optional string subject = 3;
+  optional string body_template = 4;
+  repeated string variables = 5;
+  optional bool is_active = 6;
+}
+
+message ListTemplatesRequest {
+  optional string channel = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message TemplatesResponse {
+  repeated NotificationTemplate templates = 1;
+  int32 total = 2;
+}

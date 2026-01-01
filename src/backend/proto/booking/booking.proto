@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package booking;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/booking";
+
+import "google/protobuf/timestamp.proto";
+
+// BookingService handles booking and reservation management
+service BookingService {
+  // Renter endpoints
+  rpc CreateBooking(CreateBookingRequest) returns (Booking);
+  rpc GetBooking(GetBookingRequest) returns (Booking);
+  rpc ListRenterBookings(ListBookingsRequest) returns (ListBookingsResponse);
+  rpc CancelBooking(CancelBookingRequest) returns (Booking);
+  
+  // Owner endpoints
+  rpc ListOwnerBookings(ListBookingsRequest) returns (ListBookingsResponse);
+  rpc ConfirmBooking(ConfirmBookingRequest) returns (Booking);
+  rpc StartBooking(StartBookingRequest) returns (Booking);
+  rpc CompleteBooking(CompleteBookingRequest) returns (Booking);
+  
+  // Agreement
+  rpc SignAgreement(SignAgreementRequest) returns (Booking);
+  rpc GetAgreement(GetAgreementRequest) returns (AgreementResponse);
+  
+  // Internal (service-to-service)
+  rpc GetBookingById(GetBookingRequest) returns (Booking);
+  rpc UpdateBookingPaymentStatus(UpdatePaymentStatusRequest) returns (Booking);
+}
+
+// Booking represents a rental booking
+message Booking {
+  string id = 1;
+  string booking_number = 2;
+  string renter_id = 3;
+  string owner_id = 4;
+  string rental_item_id = 5;
+  string status = 6; // pending, confirmed, active, completed, cancelled
+  
+  // Dates
+  google.protobuf.Timestamp start_date = 7;
+  google.protobuf.Timestamp end_date = 8;
+  int32 total_days = 9;
+  
+  // Pricing
+  double daily_rate = 10;
+  double subtotal = 11;
+  double security_deposit = 12;
+  double service_fee = 13;
+  double total_amount = 14;
+  
+  // Locations
+  PickupReturnLocation pickup_location = 15;
+  PickupReturnLocation return_location = 16;
+  
+  // Additional
+  repeated AdditionalService additional_services = 17;
+  string cancellation_policy = 18; // flexible, moderate, strict
+  
+  // Agreement
+  bool agreement_signed = 19;
+  string agreement_url = 20;
+  
+  // Cancellation info
+  optional string cancelled_by = 21;
+  optional string cancellation_reason = 22;
+  
+  google.protobuf.Timestamp created_at = 23;
+  google.protobuf.Timestamp updated_at = 24;
+}
+
+message PickupReturnLocation {
+  string address = 1;
+  string notes = 2;
+  google.protobuf.Timestamp time = 3;
+}
+
+message AdditionalService {
+  string name = 1;
+  double price = 2;
+}
+
+// Create booking messages
+message CreateBookingRequest {
+  string renter_id = 1;
+  string rental_item_id = 2;
+  google.protobuf.Timestamp start_date = 3;
+  google.protobuf.Timestamp end_date = 4;
+  PickupReturnLocation pickup_location = 5;
+  PickupReturnLocation return_location = 6;
+  repeated AdditionalService additional_services = 7;
+  string cancellation_policy = 8;
+}
+
+// Get booking messages
+message GetBookingRequest {
+  string booking_id = 1;
+  optional string user_id = 2; // for authorization
+}
+
+// List bookings messages
+message ListBookingsRequest {
+  string user_id = 1;
+  optional string status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListBookingsResponse {
+  repeated Booking bookings = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Cancel booking messages
+message CancelBookingRequest {
+  string booking_id = 1;
+  string user_id = 2;
+  string reason = 3;
+}
+
+// Confirm booking messages
+message ConfirmBookingRequest {
+  string booking_id = 1;
+  string owner_id = 2;
+}
+
+// Start booking messages
+message StartBookingRequest {
+  string booking_id = 1;
+  string user_id = 2; // owner or renter
+}
+
+// Complete booking messages
+message CompleteBookingRequest {
+  string booking_id = 1;
+  string owner_id = 2;
+  optional string notes = 3;
+}
+
+// Agreement messages
+message SignAgreementRequest {
+  string booking_id = 1;
+  string user_id = 2;
+  bytes signature = 3; // digital signature data
+}
+
+message GetAgreementRequest {
+  string booking_id = 1;
+  string user_id = 2;
+}
+
+message AgreementResponse {
+  string booking_id = 1;
+  string agreement_url = 2;
+  bool renter_signed = 3;
+  bool owner_signed = 4;
+}
+
+// Internal messages
+message UpdatePaymentStatusRequest {
+  string booking_id = 1;
+  string payment_status = 2; // paid, partially_paid, refunded
+  string payment_id = 3;
+}

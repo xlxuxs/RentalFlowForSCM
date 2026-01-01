@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+package inventory;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/inventory";
+
+import "google/protobuf/timestamp.proto";
+
+// InventoryService handles rental item management
+service InventoryService {
+  // Public endpoints
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse);
+  rpc GetItem(GetItemRequest) returns (RentalItem);
+  rpc SearchItems(SearchItemsRequest) returns (ListItemsResponse);
+  
+  // Owner endpoints
+  rpc CreateItem(CreateItemRequest) returns (RentalItem);
+  rpc UpdateItem(UpdateItemRequest) returns (RentalItem);
+  rpc DeleteItem(DeleteItemRequest) returns (DeleteItemResponse);
+  rpc GetOwnerItems(GetOwnerItemsRequest) returns (ListItemsResponse);
+  
+  // Availability management
+  rpc GetAvailability(GetAvailabilityRequest) returns (AvailabilityResponse);
+  rpc UpdateAvailability(UpdateAvailabilityRequest) returns (AvailabilityResponse);
+  rpc BlockDates(BlockDatesRequest) returns (BlockDatesResponse);
+  rpc UnblockDates(UnblockDatesRequest) returns (UnblockDatesResponse);
+  
+  // Maintenance
+  rpc CreateMaintenanceLog(CreateMaintenanceRequest) returns (MaintenanceLog);
+  rpc GetMaintenanceLogs(GetMaintenanceLogsRequest) returns (MaintenanceLogsResponse);
+}
+
+// RentalItem represents a rental item (vehicle, equipment, property)
+message RentalItem {
+  string id = 1;
+  string owner_id = 2;
+  string title = 3;
+  string description = 4;
+  string category = 5; // vehicle, equipment, property
+  string subcategory = 6;
+  
+  // Pricing
+  double daily_rate = 7;
+  double weekly_rate = 8;
+  double monthly_rate = 9;
+  double security_deposit = 10;
+  
+  // Location
+  Location location = 11;
+  
+  // Details
+  map<string, string> specifications = 12;
+  repeated string images = 13;
+  
+  bool is_active = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+message Location {
+  string address = 1;
+  string city = 2;
+  double latitude = 3;
+  double longitude = 4;
+}
+
+// List items messages
+message ListItemsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional string category = 3;
+  optional string city = 4;
+  optional double min_price = 5;
+  optional double max_price = 6;
+}
+
+message ListItemsResponse {
+  repeated RentalItem items = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Get item messages
+message GetItemRequest {
+  string item_id = 1;
+}
+
+// Search messages
+message SearchItemsRequest {
+  string query = 1;
+  optional string category = 2;
+  optional string city = 3;
+  optional double min_price = 4;
+  optional double max_price = 5;
+  optional string start_date = 6; // YYYY-MM-DD
+  optional string end_date = 7;   // YYYY-MM-DD
+  int32 page = 8;
+  int32 page_size = 9;
+}
+
+// Create item messages
+message CreateItemRequest {
+  string owner_id = 1;
+  string title = 2;
+  string description = 3;
+  string category = 4;
+  string subcategory = 5;
+  double daily_rate = 6;
+  double weekly_rate = 7;
+  double monthly_rate = 8;
+  double security_deposit = 9;
+  Location location = 10;
+  map<string, string> specifications = 11;
+  repeated string images = 12;
+}
+
+// Update item messages
+message UpdateItemRequest {
+  string item_id = 1;
+  string owner_id = 2; // for authorization
+  optional string title = 3;
+  optional string description = 4;
+  optional double daily_rate = 5;
+  optional double weekly_rate = 6;
+  optional double monthly_rate = 7;
+  optional double security_deposit = 8;
+  optional Location location = 9;
+  map<string, string> specifications = 10;
+  repeated string images = 11;
+  optional bool is_active = 12;
+}
+
+// Delete item messages
+message DeleteItemRequest {
+  string item_id = 1;
+  string owner_id = 2; // for authorization
+}
+
+message DeleteItemResponse {
+  bool success = 1;
+}
+
+// Owner items messages
+message GetOwnerItemsRequest {
+  string owner_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// Availability messages
+message GetAvailabilityRequest {
+  string item_id = 1;
+  string start_date = 2; // YYYY-MM-DD
+  string end_date = 3;   // YYYY-MM-DD
+}
+
+message AvailabilityResponse {
+  string item_id = 1;
+  repeated AvailabilitySlot slots = 2;
+}
+
+message AvailabilitySlot {
+  string id = 1;
+  string start_date = 2;
+  string end_date = 3;
+  string status = 4; // available, booked, maintenance
+  optional string booking_id = 5;
+}
+
+message UpdateAvailabilityRequest {
+  string item_id = 1;
+  string owner_id = 2;
+  repeated AvailabilitySlot slots = 3;
+}
+
+// Block/Unblock dates (used by Booking service)
+message BlockDatesRequest {
+  string item_id = 1;
+  string start_date = 2;
+  string end_date = 3;
+  string booking_id = 4;
+}
+
+message BlockDatesResponse {
+  bool success = 1;
+  string slot_id = 2;
+}
+
+message UnblockDatesRequest {
+  string item_id = 1;
+  string booking_id = 2;
+}
+
+message UnblockDatesResponse {
+  bool success = 1;
+}
+
+// Maintenance messages
+message MaintenanceLog {
+  string id = 1;
+  string rental_item_id = 2;
+  string maintenance_type = 3; // scheduled, repair, cleaning
+  string description = 4;
+  google.protobuf.Timestamp start_date = 5;
+  google.protobuf.Timestamp end_date = 6;
+  double cost = 7;
+  string status = 8; // scheduled, in_progress, completed
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message CreateMaintenanceRequest {
+  string rental_item_id = 1;
+  string owner_id = 2;
+  string maintenance_type = 3;
+  string description = 4;
+  google.protobuf.Timestamp start_date = 5;
+  google.protobuf.Timestamp end_date = 6;
+  double cost = 7;
+}
+
+message GetMaintenanceLogsRequest {
+  string rental_item_id = 1;
+  string owner_id = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message MaintenanceLogsResponse {
+  repeated MaintenanceLog logs = 1;
+  int32 total = 2;
+}

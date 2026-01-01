@@ -1,0 +1,57 @@
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+COPY services/api-gateway/go.mod services/api-gateway/go.sum ./services/api-gateway/
+COPY services/auth-service/go.mod services/auth-service/go.sum ./services/auth-service/
+COPY services/booking-service/go.mod services/booking-service/go.sum ./services/booking-service/
+COPY services/inventory-service/go.mod services/inventory-service/go.sum ./services/inventory-service/
+COPY services/notification-service/go.mod services/notification-service/go.sum ./services/notification-service/
+COPY services/payment-service/go.mod services/payment-service/go.sum ./services/payment-service/
+COPY services/review-service/go.mod services/review-service/go.sum ./services/review-service/
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build all services
+RUN cd services/api-gateway && CGO_ENABLED=0 GOOS=linux go build -o /bin/api-gateway ./cmd/server
+RUN cd services/auth-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/auth-service ./cmd/server
+RUN cd services/booking-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/booking-service ./cmd/server
+RUN cd services/inventory-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/inventory-service ./cmd/server
+RUN cd services/notification-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/notification-service ./cmd/server
+RUN cd services/payment-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/payment-service ./cmd/server
+RUN cd services/review-service && CGO_ENABLED=0 GOOS=linux go build -o /bin/review-service ./cmd/server
+
+# Final stage
+FROM alpine:3.21
+
+RUN apk --no-cache add ca-certificates tzdata bash curl rabbitmq-server
+
+WORKDIR /app
+
+# Copy binaries
+COPY --from=builder /bin/api-gateway .
+COPY --from=builder /bin/auth-service .
+COPY --from=builder /bin/booking-service .
+COPY --from=builder /bin/inventory-service .
+COPY --from=builder /bin/notification-service .
+COPY --from=builder /bin/payment-service .
+COPY --from=builder /bin/review-service .
+
+# Copy entrypoint script
+COPY scripts/render_entrypoint.sh .
+RUN chmod +x render_entrypoint.sh
+
+# Expose the main port (Gateway)
+EXPOSE 8080
+
+# Health check (pinging the gateway)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["./render_entrypoint.sh"]

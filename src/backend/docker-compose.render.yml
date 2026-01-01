@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Postgres (Same as original)
+  postgres:
+    image: postgres:15-alpine
+    container_name: rentalflow-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rentalflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rentalflow123}
+      POSTGRES_DB: ${POSTGRES_DB:-rentalflow}
+    ports:
+      - "5450:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - rentalflow
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U rentalflow" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Same as original)
+  redis:
+    image: redis:7-alpine
+    container_name: rentalflow-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - rentalflow
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Unified RentalFlow Service
+  rentalflow-all:
+    image: rentalflow-all:latest
+    container_name: rentalflow-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.render
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - RENTALFLOW_DATABASE_HOST=postgres
+      - RENTALFLOW_DATABASE_PORT=5432
+      - RENTALFLOW_DATABASE_USER=${POSTGRES_USER:-rentalflow}
+      - RENTALFLOW_DATABASE_PASSWORD=${POSTGRES_PASSWORD:-rentalflow123}
+      - RENTALFLOW_DATABASE_NAME=auth_db # Note: Config might need to handle per-service DB names if they differ
+      - POSTGRES_USER=${POSTGRES_USER:-rentalflow} # Fallback
+      - RENTALFLOW_REDIS_HOST=redis
+      - RENTALFLOW_REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
+      - LOG_LEVEL=debug
+      # Services configuration (Overriding to localhost internal to container)
+      # Actually, render_entrypoint.sh sets these for the *processes*. 
+      # But Gateway needs them too. render_entrypoint.sh sets them before starting Gateway.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - rentalflow
+
+networks:
+  rentalflow:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: RentalFlow API
+  description: API documentation for the RentalFlow microservices ecosystem.
+  version: 1.0.0
+
+servers:
+  - url: https://rentalflow.onrender.com
+    description: Production Server (API Gateway)
+  - url: http://localhost:8080
+    description: Local Development Server (API Gateway)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [renter, owner, admin] }
+        phone: { type: string }
+        bio: { type: string }
+        avatar_url: { type: string, format: url }
+
+    Item:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        daily_rate: { type: number }
+        images: { type: array, items: { type: string } }
+        city: { type: string }
+        is_active: { type: boolean }
+
+    Booking:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        booking_number: { type: string }
+        status: { type: string }
+        total_amount: { type: number }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, first_name, last_name]
+              properties:
+                email: { type: string }
+                password: { type: string }
+                first_name: { type: string }
+                last_name: { type: string }
+                role: { type: string, default: renter }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+
+  /api/auth/login:
+    post:
+      summary: Authenticate user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: "#/components/schemas/User" }
+                  access_token: { type: string }
+
+  /api/items:
+    get:
+      summary: List or get items
+      tags: [Inventory]
+      parameters:
+        - name: id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: category
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+    post:
+      summary: Create an item
+      tags: [Inventory]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: Created
+
+  /api/bookings:
+    post:
+      summary: Create a booking
+      tags: [Booking]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: Created
+
+  /api/payments/initialize:
+    post:
+      summary: Start a payment flow
+      tags: [Payment]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url: { type: string }
+
+  /api/notifications/user:
+    get:
+      summary: Get user notifications
+      tags: [Notification]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Success

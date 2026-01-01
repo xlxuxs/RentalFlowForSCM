@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package review;
+
+option go_package = "github.com/rentalflow/rentalflow/pkg/pb/review";
+
+import "google/protobuf/timestamp.proto";
+
+// ReviewService handles reviews and ratings
+service ReviewService {
+  // Review operations
+  rpc CreateReview(CreateReviewRequest) returns (Review);
+  rpc UpdateReview(UpdateReviewRequest) returns (Review);
+  rpc DeleteReview(DeleteReviewRequest) returns (DeleteReviewResponse);
+  rpc GetReview(GetReviewRequest) returns (Review);
+  
+  // List reviews
+  rpc GetUserReviews(GetUserReviewsRequest) returns (ReviewsResponse);
+  rpc GetItemReviews(GetItemReviewsRequest) returns (ReviewsResponse);
+  rpc GetBookingReviews(GetBookingReviewsRequest) returns (ReviewsResponse);
+  
+  // Rating summaries
+  rpc GetUserRating(GetRatingRequest) returns (RatingSummary);
+  rpc GetItemRating(GetRatingRequest) returns (RatingSummary);
+  
+  // Admin operations
+  rpc ModerateReview(ModerateReviewRequest) returns (Review);
+}
+
+// Review represents a review
+message Review {
+  string id = 1;
+  string booking_id = 2;
+  string reviewer_id = 3;
+  string target_user_id = 4;   // for user reviews
+  string target_item_id = 5;   // for item reviews
+  string review_type = 6;      // renter_to_owner, owner_to_renter, renter_to_item
+  double rating = 7;           // 1.0 to 5.0
+  string comment = 8;
+  
+  // Aspect ratings
+  map<string, double> aspects = 9; // cleanliness, condition, communication, etc.
+  
+  bool is_verified = 10;
+  bool is_visible = 11;
+  
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+// Rating summary
+message RatingSummary {
+  string target_id = 1;
+  string target_type = 2; // user, item
+  double average_rating = 3;
+  int32 total_reviews = 4;
+  map<string, int32> rating_distribution = 5; // "5": 10, "4": 5, etc.
+  map<string, double> aspect_averages = 6;
+}
+
+// Create review messages
+message CreateReviewRequest {
+  string booking_id = 1;
+  string reviewer_id = 2;
+  string review_type = 3;
+  double rating = 4;
+  string comment = 5;
+  map<string, double> aspects = 6;
+}
+
+// Update review messages
+message UpdateReviewRequest {
+  string review_id = 1;
+  string reviewer_id = 2;
+  optional double rating = 3;
+  optional string comment = 4;
+  map<string, double> aspects = 5;
+}
+
+// Delete review messages
+message DeleteReviewRequest {
+  string review_id = 1;
+  string user_id = 2; // reviewer or admin
+}
+
+message DeleteReviewResponse {
+  bool success = 1;
+}
+
+// Get review messages
+message GetReviewRequest {
+  string review_id = 1;
+}
+
+// Get user reviews messages
+message GetUserReviewsRequest {
+  string user_id = 1;
+  optional string review_type = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Get item reviews messages
+message GetItemReviewsRequest {
+  string item_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// Get booking reviews messages
+message GetBookingReviewsRequest {
+  string booking_id = 1;
+}
+
+message ReviewsResponse {
+  repeated Review reviews = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Get rating messages
+message GetRatingRequest {
+  string target_id = 1;
+}
+
+// Moderate review messages
+message ModerateReviewRequest {
+  string review_id = 1;
+  string admin_id = 2;
+  bool is_visible = 3;
+  string reason = 4;
+}

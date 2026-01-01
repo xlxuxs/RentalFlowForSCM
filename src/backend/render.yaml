@@ -1,0 +1,67 @@
+services:
+  - type: web
+    name: rentalflow-backend
+    runtime: docker
+    dockerFilePath: ./Dockerfile.render
+    envVars:
+      - key: LOG_LEVEL
+        value: info
+      # Database Connections
+      - key: MONGODB_URI
+        value: mongodb+srv://alleoo2004_db_user:9cElBPBPQjE285f8@rentalflow.ivirf9x.mongodb.net/?appName=rentalflow
+      - key: RENTALFLOW_DATABASE_NAME
+        value: rentalflow
+
+      # Redis Connection
+      - key: RENTALFLOW_REDIS_HOST
+        fromService: rentalflow-redis
+        property: host
+      - key: RENTALFLOW_REDIS_PORT
+        fromService: rentalflow-redis
+        property: port
+
+      # Secrets (Should be manual or sync)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRY
+        value: 24h
+
+      # Chapa Payment Gateway
+      - key: RENTALFLOW_CHAPA_SECRET_KEY
+        sync: false
+      - key: RENTALFLOW_CHAPA_PUBLIC_KEY
+        sync: false
+      - key: RENTALFLOW_CHAPA_WEBHOOK_SECRET
+        sync: false
+      - key: RENTALFLOW_CHAPA_PAYMENT_LINK
+        value: http://checkout.chapa.co/checkout/web/payment/PL-xJ8dMm1pWkNB
+      - key: RENTALFLOW_CHAPA_CALLBACK_URL
+        value: https://rentalflow-backend.onrender.com/payment/callback
+
+      # SMTP Email
+      - key: RENTALFLOW_SMTP_HOST
+        value: smtp.gmail.com
+      - key: RENTALFLOW_SMTP_PORT
+        value: 587
+      - key: RENTALFLOW_SMTP_USERNAME
+        value: alleoo2004@gmail.com
+      - key: RENTALFLOW_SMTP_PASSWORD
+        sync: false
+      - key: RENTALFLOW_SMTP_FROM_EMAIL
+        value: alleoo2004@gmail.com
+      - key: RENTALFLOW_SMTP_FROM_NAME
+        value: RentalFlow
+
+      # Cloudinary
+      - key: RENTALFLOW_CLOUDINARY_CLOUD_NAME
+        value: ds6ednoms
+      - key: RENTALFLOW_CLOUDINARY_API_KEY
+        value: 166556655245121
+      - key: RENTALFLOW_CLOUDINARY_API_SECRET
+        sync: false
+      - key: RENTALFLOW_CLOUDINARY_UPLOAD_PRESET
+        value: rentalflow
+
+databases:
+  - name: rentalflow-redis
+    plan: free # Redis free tier on Render
